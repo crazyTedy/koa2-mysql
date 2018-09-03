@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        li {
+            list-style: none;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        li span {
+            display: inline-block;
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <ul class="get_list"></ul>
+    <div>
+        <input type="text" id="title" value="标题">
+        <input type="text" id="author" value="作者">
+        <input type="text" id="mydate" value="2017-2-1">
+        <button id="submit">提交</button>
+    </div>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        $(function () {
+            var get_list = function (response) {
+                $.ajax({
+                    type: 'GET',
+                    url: 'http://localhost:3000/get_user_list',
+                    success: function (response) {
+                        if (response.length > 0) {
+                            $('ul').html('');
+                            response.forEach(element => {
+                                $('ul').append(`<li data-id="${element.runoob_id}">
+                                    <span class="id">${element.runoob_id}</span>
+                                    <span class="title">${element.runoob_title}</span>
+                                    <input typr="text" class="edit" style="display: none" value="${element.runoob_title}">
+                                    <span class="author">${element.runoob_author}</span>
+                                    <input typr="text" class="edit" style="display: none" value="${element.runoob_author}">
+                                    <button class="delete">删除</button>
+                                    <button class="update">更新</button>
+                                </li>`)
+                            });
+                        }
+                    }
+                })
+            };
+            get_list()
+            $(document).on('click', '#submit', function () {
+                var data = {
+                    runoob_title: $('#title').val(),
+                    runoob_author: $('#author').val(),
+                    submission_date: $('#mydate').val(),
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: 'http://localhost:3000/add_user',
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            get_list()
+                        }
+                    }
+                })
+            });
+            $(document).on('click', '.title, .author', function () {
+                $(this).next().show();
+                $(this).hide()
+            })
+            $(document).on('keydown', '.edit', function (e) {
+                if (e.keyCode == 13) {
+                    $(this).prev().show().text($(this).val());
+                    $(this).hide()
+                }
+            })
+            $(document).on('click', 'button.delete', function () {
+                $.ajax({
+                    type: 'DELETE',
+                    url: 'http://localhost:3000/delete_user',
+                    data: {
+                        id: $(this).parent().find('.id').text()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            get_list()
+                        }
+                    }
+                })
+            })
+            $(document).on('click', 'button.update', function () {
+                var _parent = $(this).parent()
+                var data = {
+                    id: _parent.find('.id').text(),
+                    runoob_title: _parent.find('.title').text(),
+                    runoob_author: _parent.find('.author').text(),
+                }
+                console.log(data)
+                $.ajax({
+                    type: 'PUT',
+                    url: 'http://localhost:3000/update_user',
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            get_list()
+                        }
+                    }
+                })
+            })
+        })
+    </script>
+</body>
+
+</html>
